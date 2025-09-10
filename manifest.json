@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "HideWPP",
+  "version": "1.0.0",
+  "description": "Oculta la barra lateral de WhatsApp Web y expande el chat a pantalla completa.",
+  "permissions": ["scripting", "activeTab", "storage"],
+  "host_permissions": ["https://web.whatsapp.com/*"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Mostrar/ocultar la barra lateral"
+    }
+  },
+  "icons": {
+    "48": "icons/icon.png",
+    "128": "icons/icon.png"
+  }
+}
