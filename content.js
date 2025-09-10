@@ -22,7 +22,7 @@ function $(qsArr, root = document) {
   return null;
 }
 
-// sube desde el chat list hasta encontrar un padre cuyo siguiente hermano sea el panel de conversacion.
+// Sube desde el chat list hasta encontrar un padre cuyo siguiente hermano sea el panel de conversacion.
 function findSidebarContainer() {
   const list = $(CHAT_LIST_QS);
   if (!list) return null;
@@ -30,10 +30,10 @@ function findSidebarContainer() {
   let node = list;
   while (node && node !== document.body) {
     const parent = node.parentElement;
-    if (!parent) break;  // candidato: su siguiente hermano contiene el chat panel
+    if (!parent) break;
     const sib = parent.nextElementSibling;
     if (sib && $(CHAT_PANEL_QS, sib)) {
-      return parent; // ESTE es el wrapper del sidebar que necesitamos colapsar
+      return parent; // wrapper real del sidebar
     }
     node = parent;
   }
@@ -52,8 +52,7 @@ function findChatContainer(sidebarContainer) {
 }
 
 // toggle + estilos inline 
-
-let current = { sidebar: null, chat: null, container: null };
+let current = { sidebar: null, chat: null };
 let hiddenState = false;
 let mo = null;
 
@@ -65,7 +64,7 @@ function applyHidden(sidebar, chat) {
   chat.style.transition    = 'flex .25s ease, width .25s ease, max-width .25s ease';
 
   // colapsar sidebar por completo
-  sidebar.style.display   = 'block';                    
+  sidebar.style.display   = 'block';
   sidebar.style.flex      = '0 0 0';
   sidebar.style.width     = '0';
   sidebar.style.maxWidth  = '0';
@@ -83,7 +82,6 @@ function applyHidden(sidebar, chat) {
 
 function clearHidden(sidebar, chat) {
   if (!sidebar || !chat) return;
-
   for (const el of [sidebar, chat]) {
     el.style.transition = '';
     el.style.flex = '';
@@ -100,19 +98,15 @@ function setHidden(nextHidden) {
   // redescubrir nodos en cada toggle por si wpp rearmo el DOM
   const sidebar = findSidebarContainer();
   const chat    = findChatContainer(sidebar);
-
-  current = { sidebar, chat, container: sidebar?.parentElement || null };
+  current = { sidebar, chat };
 
   if (!sidebar || !chat) {
-    console.warn('[WA Hider] No se pudo encontrar sidebar/chat.');
+    console.warn('[HideWPP] No se pudo encontrar sidebar/chat.');
     return;
   }
 
-  if (nextHidden) {
-    applyHidden(sidebar, chat);
-  } else {
-    clearHidden(sidebar, chat);
-  }
+  if (nextHidden) applyHidden(sidebar, chat);
+  else            clearHidden(sidebar, chat);
 
   hiddenState = nextHidden;
   chrome.storage.local.set({ sidebarHidden: hiddenState }).catch(() => {});
@@ -120,6 +114,20 @@ function setHidden(nextHidden) {
 
 function toggleHidden() {
   setHidden(!hiddenState);
+}
+
+// estado real (no usa clases). sirve para el popup.
+function computeHiddenState() {
+  const sidebar = findSidebarContainer();
+  if (!sidebar) return false;
+  const cs = getComputedStyle(sidebar);
+  const w  = sidebar.getBoundingClientRect().width;
+  return cs.display === 'none' ||
+         cs.maxWidth === '0px' ||
+         cs.width === '0px' ||
+         cs.flex.startsWith('0 0 0') ||
+         cs.opacity === '0' ||
+         w < 2;
 }
 
 // restaurar estado al cargar
@@ -140,17 +148,21 @@ function toggleHidden() {
     if (!sidebar || !chat) return;
     if (sidebar !== current.sidebar || chat !== current.chat) {
       applyHidden(sidebar, chat);
-      current = { sidebar, chat, container: sidebar?.parentElement || null };
+      current = { sidebar, chat };
     }
   });
   mo.observe(document.body, { childList: true, subtree: true });
 })();
 
-// mensajes desde popup/atajo
+// para saber si esta activo o no
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'WA_TOGGLE_SIDEBAR') {
     toggleHidden();
-    sendResponse?.({ ok: true, hidden: hiddenState });
+    sendResponse?.({ ok: true, hidden: computeHiddenState() });
+    return true;
+  }
+  if (msg?.type === 'WA_GET_STATE') {
+    sendResponse?.({ hidden: computeHiddenState() });
     return true;
   }
 });
