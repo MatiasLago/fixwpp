@@ -166,3 +166,53 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true;
   }
 });
+
+function createSidebarButton() {
+  if (document.getElementById("hidewpp-side-btn")) return;
+
+  // Buscar un boton nativo como referencia
+  const referenceBtn = document.querySelector(
+    'button[aria-label="Chats"], button[aria-label="Status"], button[aria-label="Communities"]'
+  );
+  if (!referenceBtn) return;
+
+  const container = referenceBtn.parentElement?.parentElement;
+  if (!container) return;
+
+  // crear boton
+  const btn = document.createElement("button");
+  btn.id = "hidewpp-side-btn";
+  btn.setAttribute("title", "Mostrar/Ocultar chats");
+  btn.style.width = "18px";          
+  btn.style.height = "18px";
+  btn.style.margin = "6px auto";     
+  btn.style.display = "flex";
+  btn.style.alignItems = "center";
+  btn.style.justifyContent = "center";
+  btn.style.border = "none";
+  btn.style.background = "transparent";
+  btn.style.cursor = "pointer";
+  btn.style.borderRadius = "50%";
+  btn.style.color = "white";
+  btn.style.padding = "0";
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="white">
+      <rect x="3" y="4" width="7" height="16" rx="1"></rect>
+      <rect x="14" y="4" width="7" height="16" rx="1"></rect>
+    </svg>
+  `;
+
+  btn.addEventListener("click", () => {
+    toggleHidden();
+  });
+
+  // se agrega al final
+  container.appendChild(btn);
+}
+
+const sideObserver = new MutationObserver(() => {
+  createSidebarButton();
+});
+sideObserver.observe(document.body, { childList: true, subtree: true });
+
+createSidebarButton();

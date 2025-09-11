@@ -43,5 +43,6 @@ btn.addEventListener("click", async () => {
   }
 });
 
-// Actualiza el texto al abrir el popup
+// actualiza el texto al abrir el popup
 refreshLabel();
+
