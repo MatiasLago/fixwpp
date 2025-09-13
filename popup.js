@@ -1,4 +1,5 @@
-const btn = document.getElementById("toggleBtn");
+const toggleBtn = document.getElementById("toggleBtn");
+const openBtn = document.getElementById("openBtn");
 
 async function getActiveWaTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -6,43 +7,41 @@ async function getActiveWaTab() {
   return tab;
 }
 
-function setLabel(hidden) {
-  btn.textContent = hidden ? "Mostrar chats" : "Ocultar chats";
+function updateToggleButton(hidden) {
+  toggleBtn.style.display = "block";
+  openBtn.style.display = "none";
+  if (hidden) {
+    toggleBtn.textContent = "Mostrar chats";
+    toggleBtn.className = "show";
+  } else {
+    toggleBtn.textContent = "Ocultar chats";
+    toggleBtn.className = "hide";
+  }
 }
 
-async function refreshLabel() {
+async function refreshState() {
   const tab = await getActiveWaTab();
   if (!tab) {
-    btn.textContent = "Abrí WhatsApp Web";
-    btn.dataset.action = "open";
+    toggleBtn.style.display = "none";
+    openBtn.style.display = "block";
     return;
   }
 
-  btn.dataset.action = "toggle";
-
   chrome.tabs.sendMessage(tab.id, { type: "WA_GET_STATE" }, (resp) => {
-    setLabel(Boolean(resp?.hidden));
+    updateToggleButton(Boolean(resp?.hidden));
   });
 }
 
-// abrir wpp web desde el popup
-btn.addEventListener("click", async () => {
-  const action = btn.dataset.action;
-
-  if(action === "open"){
-    chrome.tabs.create({url: "https://web.whatsapp.com/"});
-    return;
-  }
-
-  if(action === "toggle"){
+toggleBtn.addEventListener("click", async () => {
   const tab = await getActiveWaTab();
   if (!tab) return;
   chrome.tabs.sendMessage(tab.id, { type: "WA_TOGGLE_SIDEBAR" }, (resp) => {
-    setLabel(Boolean(resp?.hidden));
-    });
-  }
+    updateToggleButton(Boolean(resp?.hidden));
+  });
 });
 
-// actualiza el texto al abrir el popup
-refreshLabel();
+openBtn.addEventListener("click", () => {
+  chrome.tabs.create({ url: "https://web.whatsapp.com/" });
+});
 
+refreshState();

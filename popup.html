@@ -2,15 +2,52 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>WhatsApp Sidebar Hider</title>
+  <title>HideWPP</title>
   <style>
-    body { font-family: sans-serif; margin: 12px; }
-    button { padding: 8px 12px; border-radius: 6px; border: none; background: #25d366; color: #fff; cursor: pointer; }
-    button:hover { background: #1ebc5c; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 12px;
+      background-color: #202c33;
+      color: #e9edef;
+      width: 200px;
+    }
+    h1 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: background 0.2s;
+    }
+    #toggleBtn.show {
+      background-color: #25d366;
+      color: #fff;
+    }
+    #toggleBtn.hide {
+      background-color: #e53935;
+      color: #fff;
+    }
+    #openBtn {
+      background-color: #3b4a54;
+      color: #e9edef;
+    }
+    #openBtn:hover {
+      background-color: #55616b;
+    }
   </style>
 </head>
 <body>
-  <button id="toggleBtn">Mostrar/Ocultar</button>
+  <h1>HideWPP</h1>
+  <button id="toggleBtn" style="display:none">...</button>
+  <button id="openBtn" style="display:none">Abrir WhatsApp Web</button>
   <script src="popup.js"></script>
 </body>
 </html>

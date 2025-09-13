@@ -22,7 +22,7 @@ function $(qsArr, root = document) {
   return null;
 }
 
-// Sube desde el chat list hasta encontrar un padre cuyo siguiente hermano sea el panel de conversacion.
+// Sube desde el chat list hasta encontrar un padre cuyo siguiente hermano sea el panel
 function findSidebarContainer() {
   const list = $(CHAT_LIST_QS);
   if (!list) return null;
@@ -33,7 +33,7 @@ function findSidebarContainer() {
     if (!parent) break;
     const sib = parent.nextElementSibling;
     if (sib && $(CHAT_PANEL_QS, sib)) {
-      return parent; // wrapper real del sidebar
+      return parent;
     }
     node = parent;
   }
@@ -47,7 +47,6 @@ function findChatContainer(sidebarContainer) {
     if ($(CHAT_PANEL_QS, sib)) return sib;
     sib = sib.nextElementSibling;
   }
-  // fallback global
   return $(CHAT_PANEL_QS);
 }
 
@@ -57,40 +56,52 @@ let hiddenState = false;
 let mo = null;
 
 function applyHidden(sidebar, chat) {
-  if (!sidebar || !chat) return false;
+  if (!chat) return false;
 
-  // transiciones suaves
-  sidebar.style.transition = 'width .25s ease, max-width .25s ease, opacity .2s ease';
-  chat.style.transition    = 'flex .25s ease, width .25s ease, max-width .25s ease';
+  // Expandir el chat
+  chat.style.transition = 'flex .25s ease, width .25s ease, max-width .25s ease';
+  chat.style.flex = '1 1 100%';
+  chat.style.width = '100%';
+  chat.style.maxWidth = '100%';
 
-  // colapsar sidebar por completo
-  sidebar.style.display   = 'block';
-  sidebar.style.flex      = '0 0 0';
-  sidebar.style.width     = '0';
-  sidebar.style.maxWidth  = '0';
-  sidebar.style.minWidth  = '0';
-  sidebar.style.overflow  = 'hidden';
-  sidebar.style.opacity   = '0';
+  const container = chat.parentElement;
+  if (!container) return true;
 
-  // expandir chat
-  chat.style.flex         = '1 1 100%';
-  chat.style.width        = '100%';
-  chat.style.maxWidth     = '100%';
+  for (const child of container.children) {
+    if (child === chat) continue; // no ocultar chat
+
+    // mantiene visible la barra de iconos
+    if (child.querySelector('button[aria-label="Chats"]')) continue;
+
+    // Colapsar cualquier otro panel lateral
+    child.style.transition = 'width .25s ease, max-width .25s ease, opacity .2s ease';
+    child.style.flex = '0 0 0';
+    child.style.width = '0';
+    child.style.maxWidth = '0';
+    child.style.minWidth = '0';
+    child.style.overflow = 'hidden';
+    child.style.opacity = '0';
+  }
 
   return true;
 }
 
 function clearHidden(sidebar, chat) {
-  if (!sidebar || !chat) return;
-  for (const el of [sidebar, chat]) {
-    el.style.transition = '';
-    el.style.flex = '';
-    el.style.width = '';
-    el.style.maxWidth = '';
-    el.style.minWidth = '';
-    el.style.overflow = '';
-    el.style.opacity = '';
-    el.style.display = '';
+  if (!chat) return;
+
+  const container = chat.parentElement;
+  if (!container) return;
+
+  for (const child of container.children) {
+    // restaurar todos
+    child.style.transition = '';
+    child.style.flex = '';
+    child.style.width = '';
+    child.style.maxWidth = '';
+    child.style.minWidth = '';
+    child.style.overflow = '';
+    child.style.opacity = '';
+    child.style.display = '';
   }
 }
 
@@ -116,7 +127,7 @@ function toggleHidden() {
   setHidden(!hiddenState);
 }
 
-// estado real (no usa clases). sirve para el popup.
+// sirve para el popup.
 function computeHiddenState() {
   const sidebar = findSidebarContainer();
   if (!sidebar) return false;
@@ -170,7 +181,6 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 function createSidebarButton() {
   if (document.getElementById("hidewpp-side-btn")) return;
 
-  // Buscar un boton nativo como referencia
   const referenceBtn = document.querySelector(
     'button[aria-label="Chats"], button[aria-label="Status"], button[aria-label="Communities"]'
   );
@@ -179,7 +189,7 @@ function createSidebarButton() {
   const container = referenceBtn.parentElement?.parentElement;
   if (!container) return;
 
-  // crear boton
+  // boton
   const btn = document.createElement("button");
   btn.id = "hidewpp-side-btn";
   btn.setAttribute("title", "Mostrar/Ocultar chats");
@@ -206,7 +216,6 @@ function createSidebarButton() {
     toggleHidden();
   });
 
-  // se agrega al final
   container.appendChild(btn);
 }
 
