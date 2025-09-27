@@ -112,7 +112,7 @@ function setHidden(nextHidden) {
   current = { sidebar, chat };
 
   if (!sidebar || !chat) {
-    console.warn('[HideWPP] No se pudo encontrar sidebar/chat.');
+    console.warn('[FixWpp] No se pudo encontrar sidebar/chat.');
     return;
   }
 
@@ -150,7 +150,7 @@ function computeHiddenState() {
     setHidden(false);
   }
 
-  // reaplicar si wpp re-renderiza
+  // reaplicar si wpp rerenderiza
   if (mo) mo.disconnect();
   mo = new MutationObserver(() => {
     if (!hiddenState) return;
@@ -179,7 +179,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 });
 
 function createSidebarButton() {
-  if (document.getElementById("hidewpp-side-btn")) return;
+  if (document.getElementById("FixWpp-side-btn")) return;
 
   const referenceBtn = document.querySelector(
     'button[aria-label="Chats"], button[aria-label="Status"], button[aria-label="Communities"]'
@@ -189,13 +189,12 @@ function createSidebarButton() {
   const container = referenceBtn.parentElement?.parentElement;
   if (!container) return;
 
-  // boton
   const btn = document.createElement("button");
-  btn.id = "hidewpp-side-btn";
+  btn.id = "FixWpp-side-btn";
   btn.setAttribute("title", "Mostrar/Ocultar chats");
-  btn.style.width = "18px";          
-  btn.style.height = "18px";
-  btn.style.margin = "6px auto";     
+  btn.style.width = "32px";
+  btn.style.height = "32px";
+  btn.style.margin = "6px auto";
   btn.style.display = "flex";
   btn.style.alignItems = "center";
   btn.style.justifyContent = "center";
@@ -203,13 +202,12 @@ function createSidebarButton() {
   btn.style.background = "transparent";
   btn.style.cursor = "pointer";
   btn.style.borderRadius = "50%";
-  btn.style.color = "white";
   btn.style.padding = "0";
+
   btn.innerHTML = `
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="white">
-      <rect x="3" y="4" width="7" height="16" rx="1"></rect>
-      <rect x="14" y="4" width="7" height="16" rx="1"></rect>
-    </svg>
+    <img src="${chrome.runtime.getURL("icons/panel-icon.png")}" 
+         alt="toggle sidebar" 
+         style="width:24px; height:24px;">
   `;
 
   btn.addEventListener("click", () => {
@@ -218,6 +216,7 @@ function createSidebarButton() {
 
   container.appendChild(btn);
 }
+
 
 const sideObserver = new MutationObserver(() => {
   createSidebarButton();
