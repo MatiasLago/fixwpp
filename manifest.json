@@ -19,10 +19,10 @@
   "commands": {
     "toggle-sidebar": {
       "suggested_key": {
-        "default": "Ctrl+Shift+Y",
-        "mac": "Command+Shift+Y"
+        "default": "Ctrl+Shift+H",
+        "mac": "Command+Shift+H"
       },
-      "description": "Mostrar/ocultar la barra lateral"
+      "description": "Mostrar/ocultar la barra lateral de WhatsApp"
     }
   },
   "icons": {
@@ -34,5 +34,9 @@
       "resources": ["icons/*.png"],
       "matches": ["https://web.whatsapp.com/*"]
     }
-  ]
+  ],
+  "background": {
+  "service_worker": "background.js"
+}
+
 }
