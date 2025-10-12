@@ -56,53 +56,43 @@ let hiddenState = false;
 let mo = null;
 
 function applyHidden(sidebar, chat) {
-  if (!chat) return false;
+  if (!sidebar || !chat) return false;
 
-  // Expandir el chat
+  // Ocultar solo el sidebar especifico (panel de chats izquierdo)
+  sidebar.style.transition = 'width .25s ease, max-width .25s ease, opacity .2s ease';
+  sidebar.style.flex = '0 0 0';
+  sidebar.style.width = '0';
+  sidebar.style.maxWidth = '0';
+  sidebar.style.minWidth = '0';
+  sidebar.style.overflow = 'hidden';
+  sidebar.style.opacity = '0';
+
+  // Expandir el chat para ocupar el espacio del sidebar
   chat.style.transition = 'flex .25s ease, width .25s ease, max-width .25s ease';
   chat.style.flex = '1 1 100%';
   chat.style.width = '100%';
   chat.style.maxWidth = '100%';
 
-  const container = chat.parentElement;
-  if (!container) return true;
-
-  for (const child of container.children) {
-    if (child === chat) continue; // no ocultar chat
-
-    // mantiene visible la barra de iconos
-    if (child.querySelector('button[aria-label="Chats"]')) continue;
-
-    // Colapsar cualquier otro panel lateral
-    child.style.transition = 'width .25s ease, max-width .25s ease, opacity .2s ease';
-    child.style.flex = '0 0 0';
-    child.style.width = '0';
-    child.style.maxWidth = '0';
-    child.style.minWidth = '0';
-    child.style.overflow = 'hidden';
-    child.style.opacity = '0';
-  }
-
   return true;
 }
 
 function clearHidden(sidebar, chat) {
-  if (!chat) return;
+  if (!sidebar || !chat) return;
 
-  const container = chat.parentElement;
-  if (!container) return;
+  // Restaurar el sidebar
+  sidebar.style.transition = '';
+  sidebar.style.flex = '';
+  sidebar.style.width = '';
+  sidebar.style.maxWidth = '';
+  sidebar.style.minWidth = '';
+  sidebar.style.overflow = '';
+  sidebar.style.opacity = '';
 
-  for (const child of container.children) {
-    // restaurar todos
-    child.style.transition = '';
-    child.style.flex = '';
-    child.style.width = '';
-    child.style.maxWidth = '';
-    child.style.minWidth = '';
-    child.style.overflow = '';
-    child.style.opacity = '';
-    child.style.display = '';
-  }
+  // Restaurar el chat
+  chat.style.transition = '';
+  chat.style.flex = '';
+  chat.style.width = '';
+  chat.style.maxWidth = '';
 }
 
 function setHidden(nextHidden) {
@@ -186,12 +176,20 @@ function createSidebarButton() {
   );
   if (!referenceBtn) return;
 
-  const container = referenceBtn.parentElement?.parentElement;
+  // Buscar el wrapper del boton de referencia para insertar al mismo nivel
+  const wrapper = referenceBtn.parentElement;
+  const container = wrapper?.parentElement;
   if (!container) return;
+
+  // Crear un wrapper similar al de los otros botones
+  const btnWrapper = document.createElement("div");
+  btnWrapper.id = "FixWpp-side-btn-wrapper";
+  btnWrapper.style.cssText = wrapper.style.cssText; // Copiar estilos del wrapper de referencia
 
   const btn = document.createElement("button");
   btn.id = "FixWpp-side-btn";
   btn.setAttribute("title", "Mostrar/Ocultar chats");
+  btn.setAttribute("aria-label", "Toggle sidebar");
   btn.style.width = "32px";
   btn.style.height = "32px";
   btn.style.margin = "6px auto";
@@ -203,10 +201,19 @@ function createSidebarButton() {
   btn.style.cursor = "pointer";
   btn.style.borderRadius = "50%";
   btn.style.padding = "0";
+  btn.style.transition = "background-color .15s ease-out";
+
+  // Hover effect
+  btn.addEventListener("mouseenter", () => {
+    btn.style.backgroundColor = "rgba(255,255,255,0.1)";
+  });
+  btn.addEventListener("mouseleave", () => {
+    btn.style.backgroundColor = "transparent";
+  });
 
   btn.innerHTML = `
-    <img src="${chrome.runtime.getURL("icons/panel-icon.png")}" 
-         alt="toggle sidebar" 
+    <img src="${chrome.runtime.getURL("icons/panel-icon.png")}"
+         alt="toggle sidebar"
          style="width:24px; height:24px;">
   `;
 
@@ -214,7 +221,10 @@ function createSidebarButton() {
     toggleHidden();
   });
 
-  container.appendChild(btn);
+  btnWrapper.appendChild(btn);
+
+  // Insertar al final del contenedor, debajo de los otros botones
+  container.appendChild(btnWrapper);
 }
 
 
