@@ -168,69 +168,39 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 });
 
-function createSidebarButton() {
-  if (document.getElementById("FixWpp-side-btn")) return;
+// Modifica el comportamiento del boton de Chats para toggle del panel lateral
+function hijackChatsButton() {
+  const selectors = [
+    'button[aria-label="Chats"]',
+    'button[title="Chats"]',
+    'header button[aria-label*="Chat"]'
+  ];
 
-  const referenceBtn = document.querySelector(
-    'button[aria-label="Chats"], button[aria-label="Status"], button[aria-label="Communities"]'
-  );
-  if (!referenceBtn) return;
+  let chatsBtn = null;
+  for (const selector of selectors) {
+    chatsBtn = document.querySelector(selector);
+    if (chatsBtn && !chatsBtn.dataset.fixwppModified) break;
+  }
 
-  // Buscar el wrapper del boton de referencia para insertar al mismo nivel
-  const wrapper = referenceBtn.parentElement;
-  const container = wrapper?.parentElement;
-  if (!container) return;
+  if (!chatsBtn || chatsBtn.dataset.fixwppModified) return;
 
-  // Crear un wrapper similar al de los otros botones
-  const btnWrapper = document.createElement("div");
-  btnWrapper.id = "FixWpp-side-btn-wrapper";
-  btnWrapper.style.cssText = wrapper.style.cssText; // Copiar estilos del wrapper de referencia
+  // Marcar como modificado para no volver a agregar el listener
+  chatsBtn.dataset.fixwppModified = "true";
 
-  const btn = document.createElement("button");
-  btn.id = "FixWpp-side-btn";
-  btn.setAttribute("title", "Mostrar/Ocultar chats");
-  btn.setAttribute("aria-label", "Toggle sidebar");
-  btn.style.width = "32px";
-  btn.style.height = "32px";
-  btn.style.margin = "6px auto";
-  btn.style.display = "flex";
-  btn.style.alignItems = "center";
-  btn.style.justifyContent = "center";
-  btn.style.border = "none";
-  btn.style.background = "transparent";
-  btn.style.cursor = "pointer";
-  btn.style.borderRadius = "50%";
-  btn.style.padding = "0";
-  btn.style.transition = "background-color .15s ease-out";
-
-  // Hover effect
-  btn.addEventListener("mouseenter", () => {
-    btn.style.backgroundColor = "rgba(255,255,255,0.1)";
-  });
-  btn.addEventListener("mouseleave", () => {
-    btn.style.backgroundColor = "transparent";
-  });
-
-  btn.innerHTML = `
-    <img src="${chrome.runtime.getURL("icons/panel-icon.png")}"
-         alt="toggle sidebar"
-         style="width:24px; height:24px;">
-  `;
-
-  btn.addEventListener("click", () => {
+  // Agregar el click listener que llama a toggleHidden
+  chatsBtn.addEventListener("click", (e) => {
+    // Prevenir el comportamiento por defecto y hacer toggle del sidebar
+    e.stopPropagation();
+    e.preventDefault();
     toggleHidden();
-  });
+  }, true); // usar capture para interceptar antes que WhatsApp
 
-  btnWrapper.appendChild(btn);
-
-  // Insertar al final del contenedor, debajo de los otros botones
-  container.appendChild(btnWrapper);
+  chatsBtn.setAttribute("title", "Mostrar/Ocultar chats");
 }
 
-
 const sideObserver = new MutationObserver(() => {
-  createSidebarButton();
+  hijackChatsButton();
 });
 sideObserver.observe(document.body, { childList: true, subtree: true });
 
-createSidebarButton();
+hijackChatsButton();

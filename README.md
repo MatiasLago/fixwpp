@@ -12,7 +12,7 @@ FixWpp es una extensión de Chrome que mejora la experiencia en WhatsApp Web, pe
 
 * Se controla desde:
 
-- Un botón en la interfaz de WhatsApp Web.
+- Un botón de chats de la interfaz de WhatsApp Web.
 
 -El popup de la extensión.
 
