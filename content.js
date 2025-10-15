@@ -168,6 +168,34 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   }
 });
 
+// Detecta si estamos en la vista de chats (lista de conversaciones visible)
+function isInChatsView() {
+  // Verificar el boton chats
+  const chatsBtn = document.querySelector('button[aria-label="Chats"]');
+
+  if (chatsBtn) {
+    const isSelected = chatsBtn.getAttribute('data-navbar-item-selected') === 'true';
+    console.log('[FixWpp Debug] Chats button selected:', isSelected);
+    return isSelected;
+  }
+
+  // Fallback: verificar si otros botones estan seleccionados
+  const allNavButtons = document.querySelectorAll('button[data-navbar-item-selected="true"]');
+  console.log('[FixWpp Debug] Botones seleccionados:', allNavButtons);
+
+  for (const btn of allNavButtons) {
+    const label = btn.getAttribute('aria-label') || '';
+    console.log('[FixWpp Debug] Botón activo:', label);
+    if (label.includes('Status') || label.includes('Estados') ||
+        label.includes('Communities') || label.includes('Comunidades') ||
+        label.includes('Channels') || label.includes('Canales')) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Modifica el comportamiento del boton de Chats para toggle del panel lateral
 function hijackChatsButton() {
   const selectors = [
@@ -187,9 +215,22 @@ function hijackChatsButton() {
   // Marcar como modificado para no volver a agregar el listener
   chatsBtn.dataset.fixwppModified = "true";
 
-  // Agregar el click listener que llama a toggleHidden
+  console.log('[FixWpp] Botón de Chats interceptado:', chatsBtn);
+
+  // Agregar el click listener
   chatsBtn.addEventListener("click", (e) => {
-    // Prevenir el comportamiento por defecto y hacer toggle del sidebar
+    const inChatsView = isInChatsView();
+    console.log('[FixWpp] Click en Chats. inChatsView:', inChatsView);
+
+    // Si NO estamos en la vista de chats (estamos en Status/Communities)
+    if (!inChatsView) {
+      console.log('[FixWpp] No estamos en Chat, permitir navegación normal');
+      // Dejar que WhatsApp maneje el click normalmente para navegar a Chats
+      return;
+    }
+
+    // Si YA estamos en Chats, hacer toggle del sidebar
+    console.log('[FixWpp] Estamos en Chat, haciendo toggle');
     e.stopPropagation();
     e.preventDefault();
     toggleHidden();
