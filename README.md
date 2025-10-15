@@ -19,7 +19,7 @@
 
 Boton **Chats** del panel lateral de WhatsApp Web.
 
-Un atajo de teclado (por defecto **Ctrl + Shift + H**) para mostrar u ocultar el panel lateral.
+Un atajo de teclado (por defecto **Ctrl + Shift + H) para mostrar u ocultar el panel lateral.
 
 También puede controlarse desde el popup de la extensión.
 
@@ -36,4 +36,4 @@ También puede controlarse desde el popup de la extensión.
 
 ## Enlace en Chrome Web Store
 
-[FixWpp - Extensión oficial] (https://chromewebstore.google.com/detail/fixwpp/oeogdnabcffbkdiekbpfajidbmkngohe)
+[FixWpp - Extensión oficial](https://chromewebstore.google.com/detail/fixwpp/oeogdnabcffbkdiekbpfajidbmkngohe)
