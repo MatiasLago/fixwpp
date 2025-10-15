@@ -19,7 +19,7 @@
 
 Boton **Chats** del panel lateral de WhatsApp Web.
 
-Un atajo de teclado (por defecto **Ctrl + Shift + H**) para mostrar u ocultar el panel lateral.
+Un atajo de teclado (**Ctrl + Shift + H**) para mostrar u ocultar el panel lateral.
 
 También puede controlarse desde el popup de la extensión.
 
