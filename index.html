@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FixWpp - Enfocate en tu conversación</title>
+  <meta name="description" content="Extensión gratuita para Chrome que oculta el panel lateral de WhatsApp Web y expande tu conversación a pantalla completa." />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #111;
+      background: #fff;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      border-bottom: 1px solid #eee;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #111;
+      text-decoration: none;
+    }
+
+    .nav-logo img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover {
+      opacity: 0.85;
+    }
+
+    .btn-primary {
+      background: #25D366;
+      color: #fff;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 64px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .hero-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+    }
+
+    .hero h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+      color: #111;
+    }
+
+    .hero h1 span {
+      color: #25D366;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .chrome-logo {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* FEATURES */
+    .features {
+      background: #f8f9fa;
+      padding: 72px 24px;
+    }
+
+    .features-inner {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .features h2 {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 48px;
+      color: #111;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px;
+    }
+
+    @media (max-width: 800px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .feature-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 24px;
+      border: 1px solid #eee;
+    }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #111;
+    }
+
+    .feature-card p {
+      font-size: 0.92rem;
+      color: #666;
+      line-height: 1.55;
+    }
+
+    /* HOW IT WORKS */
+    .how {
+      padding: 72px 24px;
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .how h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 48px;
+      color: #111;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      text-align: left;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      background: #25D366;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .step-text h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: #111;
+    }
+
+    .step-text p {
+      font-size: 0.92rem;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    /* CTA */
+    .cta {
+      background: #25D366;
+      padding: 64px 24px;
+      text-align: center;
+    }
+
+    .cta h2 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .cta p {
+      font-size: 1rem;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 32px;
+    }
+
+    .btn-white {
+      background: #fff;
+      color: #25D366;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 28px 24px;
+      font-size: 0.85rem;
+      color: #999;
+      border-top: 1px solid #eee;
+    }
+
+    footer a {
+      color: #25D366;
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      .hero h1 { font-size: 2rem; }
+      .hero { padding: 56px 20px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#">
+      <img src="icons/icon.png" alt="FixWpp logo" />
+      FixWpp
+    </a>
+    <a class="btn btn-primary" href="https://chromewebstore.google.com/detail/fixwpp/oeogdnabcffbkdiekbpfajidbmkngohe" target="_blank">
+      Instalar gratis
+    </a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <img class="hero-icon" src="icons/icon.png" alt="FixWpp" />
+    <h1>WhatsApp Web sin <span>distracciones</span></h1>
+    <p>FixWpp oculta el panel lateral de chats y expande tu conversación activa a pantalla completa. Enfocate en lo que importa.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://chromewebstore.google.com/detail/fixwpp/oeogdnabcffbkdiekbpfajidbmkngohe" target="_blank">
+        <svg class="chrome-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="4" fill="white"/>
+          <path d="M12 8h8.5a10 10 0 1 0-4.25 13.5" stroke="white" stroke-width="1.5" fill="none"/>
+        </svg>
+        Agregar a Chrome · Gratis
+      </a>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="features-inner">
+      <h2>¿Qué hace FixWpp?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>Oculta el panel lateral</h3>
+          <p>Esconde la lista de chats con un solo clic para que no te distraigan mientras trabajás.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Conversación a pantalla completa</h3>
+          <p>La conversación activa se expande automáticamente ocupando todo el ancho disponible.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Atajo de teclado</h3>
+          <p>Activá o desactivá el modo foco con <strong>Ctrl+Shift+H</strong> sin tocar el mouse.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Recuerda tu preferencia</h3>
+          <p>El estado se guarda automáticamente. Si cerras y abrís WhatsApp Web, sigue como lo dejaste.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <h2>Cómo usarlo</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <h4>Instalá la extensión</h4>
+          <p>Hacé clic en "Agregar a Chrome" y confirmá la instalación desde la Chrome Web Store.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <h4>Abrí WhatsApp Web</h4>
+          <p>Ingresá a <strong>web.whatsapp.com</strong> y abrí la conversación en la que querés enfocarte.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <h4>Activá el modo foco</h4>
+          <p>Usá el atajo <strong>Ctrl+Shift+H</strong> o el ícono de la extensión en la barra de Chrome para ocultar el panel lateral.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Listo para enfocarte</h2>
+    <p>Gratuito · Sin registro · Solo funciona en WhatsApp Web</p>
+    <a class="btn btn-white" href="https://chromewebstore.google.com/detail/fixwpp/oeogdnabcffbkdiekbpfajidbmkngohe" target="_blank">
+      Instalar FixWpp gratis
+    </a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>FixWpp &mdash; Extensión para Chrome &nbsp;·&nbsp;
+      <a href="https://chromewebstore.google.com/detail/fixwpp/oeogdnabcffbkdiekbpfajidbmkngohe" target="_blank">Chrome Web Store</a>
+    </p>
+  </footer>
+
+</body>
+</html>
