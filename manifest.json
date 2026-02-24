@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "FixWpp",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Oculta el panel lateral de chats y expande a lo ancho la conversacion.",
-  "permissions": ["tabs", "activeTab", "storage"],
+  "permissions": ["activeTab", "storage", "windows"],
   "host_permissions": ["https://web.whatsapp.com/*"],
   "action": {
     "default_popup": "popup.html"
@@ -12,7 +12,6 @@
     {
       "matches": ["https://web.whatsapp.com/*"],
       "js": ["content.js"],
-      "css": ["styles.css"],
       "run_at": "document_idle"
     }
   ],
@@ -36,7 +35,6 @@
     }
   ],
   "background": {
-  "service_worker": "background.js"
-}
-
+    "service_worker": "background.js"
+  }
 }

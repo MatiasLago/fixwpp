@@ -22,7 +22,22 @@ function $(qsArr, root = document) {
   return null;
 }
 
-// Sube desde el chat list hasta encontrar un padre cuyo siguiente hermano sea el panel
+// Devuelve false cuando el contexto de la extension ya no es valido (ej: tras recargar)
+function isContextValid() {
+  try {
+    return !!chrome.runtime?.id;
+  } catch {
+    return false;
+  }
+}
+
+function saveState(value) {
+  if (!isContextValid()) return;
+  try {
+    chrome.storage.local.set({ sidebarHidden: value });
+  } catch {}
+}
+
 function findSidebarContainer() {
   const list = $(CHAT_LIST_QS);
   if (!list) return null;
@@ -50,15 +65,26 @@ function findChatContainer(sidebarContainer) {
   return $(CHAT_PANEL_QS);
 }
 
-// toggle + estilos inline 
-let current = { sidebar: null, chat: null };
-let hiddenState = false;
-let mo = null;
+// Retorna los elementos hermanos entre sidebar y chat (divisores, separadores, etc.)
+function findDividers(sidebar, chat) {
+  const dividers = [];
+  if (!sidebar || !chat) return dividers;
+  let sib = sidebar.nextElementSibling;
+  while (sib && sib !== chat) {
+    dividers.push(sib);
+    sib = sib.nextElementSibling;
+  }
+  return dividers;
+}
 
-function applyHidden(sidebar, chat) {
+let current = { sidebar: null, chat: null, dividers: [] };
+let hiddenState = false;
+
+function applyHidden(sidebar, chat, dividers) {
   if (!sidebar || !chat) return false;
 
-  // Ocultar solo el sidebar especifico (panel de chats izquierdo)
+  const parent = sidebar.parentElement;
+
   sidebar.style.transition = 'width .25s ease, max-width .25s ease, opacity .2s ease';
   sidebar.style.flex = '0 0 0';
   sidebar.style.width = '0';
@@ -66,8 +92,22 @@ function applyHidden(sidebar, chat) {
   sidebar.style.minWidth = '0';
   sidebar.style.overflow = 'hidden';
   sidebar.style.opacity = '0';
+  sidebar.style.border = 'none';
+  sidebar.style.boxShadow = 'none';
 
-  // Expandir el chat para ocupar el espacio del sidebar
+  // Eliminar gap del contenedor flex padre (causa mas comun de la linea residual)
+  if (parent) {
+    parent.style.gap = '0';
+    parent.style.columnGap = '0';
+  }
+
+  // Eliminar border-left del panel de chat
+  chat.style.borderLeft = 'none';
+
+  for (const d of dividers) {
+    d.style.display = 'none';
+  }
+
   chat.style.transition = 'flex .25s ease, width .25s ease, max-width .25s ease';
   chat.style.flex = '1 1 100%';
   chat.style.width = '100%';
@@ -76,10 +116,11 @@ function applyHidden(sidebar, chat) {
   return true;
 }
 
-function clearHidden(sidebar, chat) {
+function clearHidden(sidebar, chat, dividers) {
   if (!sidebar || !chat) return;
 
-  // Restaurar el sidebar
+  const parent = sidebar.parentElement;
+
   sidebar.style.transition = '';
   sidebar.style.flex = '';
   sidebar.style.width = '';
@@ -87,8 +128,20 @@ function clearHidden(sidebar, chat) {
   sidebar.style.minWidth = '';
   sidebar.style.overflow = '';
   sidebar.style.opacity = '';
+  sidebar.style.border = '';
+  sidebar.style.boxShadow = '';
 
-  // Restaurar el chat
+  if (parent) {
+    parent.style.gap = '';
+    parent.style.columnGap = '';
+  }
+
+  chat.style.borderLeft = '';
+
+  for (const d of dividers) {
+    d.style.display = '';
+  }
+
   chat.style.transition = '';
   chat.style.flex = '';
   chat.style.width = '';
@@ -96,107 +149,32 @@ function clearHidden(sidebar, chat) {
 }
 
 function setHidden(nextHidden) {
-  // redescubrir nodos en cada toggle por si wpp rearmo el DOM
-  const sidebar = findSidebarContainer();
-  const chat    = findChatContainer(sidebar);
-  current = { sidebar, chat };
-
-  if (!sidebar || !chat) {
-    console.warn('[FixWpp] No se pudo encontrar sidebar/chat.');
-    return;
-  }
-
-  if (nextHidden) applyHidden(sidebar, chat);
-  else            clearHidden(sidebar, chat);
-
+  // Guardar la intencion primero — el MutationObserver la aplica cuando el DOM este listo
   hiddenState = nextHidden;
-  chrome.storage.local.set({ sidebarHidden: hiddenState }).catch(() => {});
+  saveState(hiddenState);
+
+  const sidebar  = findSidebarContainer();
+  const chat     = findChatContainer(sidebar);
+  const dividers = findDividers(sidebar, chat);
+  current = { sidebar, chat, dividers };
+
+  if (!sidebar || !chat) return;
+
+  if (nextHidden) applyHidden(sidebar, chat, dividers);
+  else            clearHidden(sidebar, chat, dividers);
 }
 
 function toggleHidden() {
   setHidden(!hiddenState);
 }
 
-// sirve para el popup.
-function computeHiddenState() {
-  const sidebar = findSidebarContainer();
-  if (!sidebar) return false;
-  const cs = getComputedStyle(sidebar);
-  const w  = sidebar.getBoundingClientRect().width;
-  return cs.display === 'none' ||
-         cs.maxWidth === '0px' ||
-         cs.width === '0px' ||
-         cs.flex.startsWith('0 0 0') ||
-         cs.opacity === '0' ||
-         w < 2;
-}
-
-// restaurar estado al cargar
-(async function init() {
-  try {
-    const { sidebarHidden } = await chrome.storage.local.get('sidebarHidden');
-    setHidden(!!sidebarHidden);
-  } catch {
-    setHidden(false);
-  }
-
-  // reaplicar si wpp rerenderiza
-  if (mo) mo.disconnect();
-  mo = new MutationObserver(() => {
-    if (!hiddenState) return;
-    const sidebar = findSidebarContainer();
-    const chat    = findChatContainer(sidebar);
-    if (!sidebar || !chat) return;
-    if (sidebar !== current.sidebar || chat !== current.chat) {
-      applyHidden(sidebar, chat);
-      current = { sidebar, chat };
-    }
-  });
-  mo.observe(document.body, { childList: true, subtree: true });
-})();
-
-// para saber si esta activo o no
-chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  if (msg?.type === 'WA_TOGGLE_SIDEBAR') {
-    toggleHidden();
-    sendResponse?.({ ok: true, hidden: computeHiddenState() });
-    return true;
-  }
-  if (msg?.type === 'WA_GET_STATE') {
-    sendResponse?.({ hidden: computeHiddenState() });
-    return true;
-  }
-});
-
-// Detecta si estamos en la vista de chats (lista de conversaciones visible)
+// Detecta si el boton Chats esta seleccionado
 function isInChatsView() {
-  // Verificar el boton chats
   const chatsBtn = document.querySelector('button[aria-label="Chats"]');
-
-  if (chatsBtn) {
-    const isSelected = chatsBtn.getAttribute('data-navbar-item-selected') === 'true';
-    console.log('[FixWpp Debug] Chats button selected:', isSelected);
-    return isSelected;
-  }
-
-  // Fallback: verificar si otros botones estan seleccionados
-  const allNavButtons = document.querySelectorAll('button[data-navbar-item-selected="true"]');
-  console.log('[FixWpp Debug] Botones seleccionados:', allNavButtons);
-
-  for (const btn of allNavButtons) {
-    const label = btn.getAttribute('aria-label') || '';
-    console.log('[FixWpp Debug] Botón activo:', label);
-    if (label.includes('Status') || label.includes('Estados') ||
-        label.includes('Communities') || label.includes('Comunidades') ||
-        label.includes('Channels') || label.includes('Canales')) {
-      return false;
-    }
-  }
-
-  return true;
+  if (!chatsBtn) return false;
+  return chatsBtn.getAttribute('data-navbar-item-selected') === 'true';
 }
 
-// Modifica el comportamiento del boton de Chats para toggle del panel lateral
 function hijackChatsButton() {
   const selectors = [
     'button[aria-label="Chats"]',
@@ -212,36 +190,65 @@ function hijackChatsButton() {
 
   if (!chatsBtn || chatsBtn.dataset.fixwppModified) return;
 
-  // Marcar como modificado para no volver a agregar el listener
   chatsBtn.dataset.fixwppModified = "true";
 
-  console.log('[FixWpp] Botón de Chats interceptado:', chatsBtn);
-
-  // Agregar el click listener
   chatsBtn.addEventListener("click", (e) => {
-    const inChatsView = isInChatsView();
-    console.log('[FixWpp] Click en Chats. inChatsView:', inChatsView);
-
-    // Si NO estamos en la vista de chats (estamos en Status/Communities)
-    if (!inChatsView) {
-      console.log('[FixWpp] No estamos en Chat, permitir navegación normal');
-      // Dejar que WhatsApp maneje el click normalmente para navegar a Chats
-      return;
-    }
-
-    // Si YA estamos en Chats, hacer toggle del sidebar
-    console.log('[FixWpp] Estamos en Chat, haciendo toggle');
+    if (!isInChatsView()) return;
     e.stopPropagation();
     e.preventDefault();
     toggleHidden();
-  }, true); // usar capture para interceptar antes que WhatsApp
+  }, true);
 
   chatsBtn.setAttribute("title", "Mostrar/Ocultar chats");
 }
 
-const sideObserver = new MutationObserver(() => {
-  hijackChatsButton();
-});
-sideObserver.observe(document.body, { childList: true, subtree: true });
+// Observer unico: re-aplica estado y re-hijackea boton (con debounce)
+let hijackTimer = null;
+const domObserver = new MutationObserver(() => {
+  // Si el contexto de la extension ya no es valido, desconectar y salir
+  if (!isContextValid()) {
+    domObserver.disconnect();
+    return;
+  }
 
-hijackChatsButton();
+  if (hiddenState) {
+    const sidebar  = findSidebarContainer();
+    const chat     = findChatContainer(sidebar);
+    const dividers = findDividers(sidebar, chat);
+    if (sidebar && chat && (sidebar !== current.sidebar || chat !== current.chat)) {
+      applyHidden(sidebar, chat, dividers);
+      current = { sidebar, chat, dividers };
+    }
+  }
+
+  clearTimeout(hijackTimer);
+  hijackTimer = setTimeout(hijackChatsButton, 300);
+});
+
+domObserver.observe(document.body, { childList: true, subtree: true });
+
+// Restaurar estado al cargar
+(async function init() {
+  try {
+    const { sidebarHidden } = await chrome.storage.local.get('sidebarHidden');
+    setHidden(!!sidebarHidden);
+  } catch {
+    setHidden(false);
+  }
+
+  hijackChatsButton();
+})();
+
+try {
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type === 'WA_TOGGLE_SIDEBAR') {
+      toggleHidden();
+      sendResponse?.({ ok: true, hidden: hiddenState });
+      return true;
+    }
+    if (msg?.type === 'WA_GET_STATE') {
+      sendResponse?.({ hidden: hiddenState });
+      return true;
+    }
+  });
+} catch {}
